@@ -44,7 +44,7 @@ class OrderControllerIntegrationTest {
         mvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.orderId").value(1))
                 .andExpect(jsonPath("$.data.status").value("CREATED"));
     }

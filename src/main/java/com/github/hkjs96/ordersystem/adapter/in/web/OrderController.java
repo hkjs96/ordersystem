@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -27,8 +28,10 @@ public class OrderController {
             @RequestBody @Valid OrderRequest request
     ) {
         OrderResponse result = orderUseCase.createOrder(request);
+
         return ResponseEntity
-                .ok(ApiResponse.success(result));
+                .status(HttpStatus.CREATED) // 201 Created 상태 코드 반환
+                .body(ApiResponse.success(result));
     }
 
     @Operation(summary = "주문 취소", description = "주어진 주문 ID를 취소 상태로 전환합니다.")
