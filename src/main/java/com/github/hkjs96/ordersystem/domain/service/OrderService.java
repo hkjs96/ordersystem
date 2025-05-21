@@ -76,6 +76,27 @@ public class OrderService implements OrderUseCase {
         eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.CANCELLED));
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void prepareShipment(Long orderId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new IllegalArgumentException("주문 미발견: " + orderId));
+
+        // ① JPA 영속성 컨텍스트에 로드된 Order 객체의 상태만 변경해도
+        //    flush 시점에 자동으로 UPDATE 쿼리가 나갑니다.
+        //    따라서 아래 save() 호출은 사실 불필요합니다.
+        order.changeStatus(OrderStatus.SHIPMENT_PREPARING);
+
+        // orderRepository.save(order);  ← 제거 가능
+
+        // ② 트랜잭션 커밋 후에만 이벤트를 내보내야
+        //    롤백 시 이벤트 중복/잘못 발행을 방지할 수 있습니다.
+        //    Spring 의 TransactionSynchronizationManager 를 활용하거나,
+        //    도메인 이벤트 퍼블리셔(예: ApplicationEventPublisher + @TransactionalEventListener) 와 결합하세요.
+        eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.SHIPMENT_PREPARING));
+    }
+
+
     private OrderResponse toResponse(Order o) {
         return new OrderResponse(o.getId(), o.getProductId(), o.getQuantity(), o.getStatus());
     }

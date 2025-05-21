@@ -29,6 +29,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
 	implementation 'org.springframework.kafka:spring-kafka:3.3.5'
+	// Kafka 역직/직렬화 관련
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3'
 
 	compileOnly 'org.projectlombok:lombok'
 
@@ -39,6 +41,7 @@ dependencies {
 	annotationProcessor 'org.projectlombok:lombok'
 
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.kafka:spring-kafka-test:3.3.6'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
