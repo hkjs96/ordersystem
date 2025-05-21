@@ -12,4 +12,9 @@ public interface InventoryRepositoryPort {
      * TTL 기반 롤백 로직은 구현체에서 처리합니다.
      */
     void reserveStock(Long productId, int quantity);
+
+    /**
+     * 주문 취소시 재고를 원복 처리합니다.
+     */
+    void releaseStock(Long productId, int quantity);  // 신규
 }

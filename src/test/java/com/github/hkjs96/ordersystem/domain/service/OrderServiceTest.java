@@ -1,6 +1,8 @@
 package com.github.hkjs96.ordersystem.domain.service;
 
+import com.github.hkjs96.ordersystem.adapter.out.event.DomainEventPublisher;
 import com.github.hkjs96.ordersystem.domain.entity.Order;
+import com.github.hkjs96.ordersystem.domain.event.OrderCancelledEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderStatus;
 import com.github.hkjs96.ordersystem.domain.repository.OrderRepository;
@@ -17,6 +19,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -39,6 +43,9 @@ class OrderServiceTest {
 
     @Mock
     private DeliveryService deliveryService;
+
+    @Mock
+    private DomainEventPublisher domainEventPublisher;
 
     @InjectMocks
     private OrderService orderService;
@@ -197,4 +204,50 @@ class OrderServiceTest {
                         ev.status() == OrderStatus.CANCELLED
         ));
     }
+
+    @Test
+    @DisplayName("cancelOrder 시 상태 변경 및 도메인 이벤트 발행")
+    void cancelOrder_publishesDomainEventAndChangesStatus() {
+        // given: repository 에 CREATED 상태의 주문이 있다고 함
+        Order order = Order.builder()
+                .id(1L)
+                .status(OrderStatus.CREATED)
+                .productId(2L)
+                .quantity(3)
+                .build();
+
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
+        // when
+        orderService.cancelOrder(1L);
+
+        // then: 상태가 CANCELLED 로 변경됐는지
+        assertEquals(OrderStatus.CANCELLED, order.getStatus());
+
+        // 그리고 정확한 이벤트가 발행됐는지
+        verify(domainEventPublisher).publish(argThat(evt ->
+                evt instanceof OrderCancelledEvent
+                        && ((OrderCancelledEvent)evt).orderId().equals(1L)
+                        && ((OrderCancelledEvent)evt).productId().equals(2L)
+                        && ((OrderCancelledEvent)evt).quantity() == 3
+        ));
+    }
+
+    @Test
+    void cancelOrder_publishesDomainEventOnly() {
+        // given
+        Order order = Order.builder()
+                .id(1L)
+                .status(OrderStatus.CANCELLED)
+                .productId(req.productId())
+                .quantity(req.quantity())
+                .build();
+        when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+        // when
+        orderService.cancelOrder(1L);
+        // then
+        verify(domainEventPublisher).publish(any(OrderCancelledEvent.class));
+        verify(inventoryPort, never()).releaseStock(any(), anyInt());
+    }
+
 }

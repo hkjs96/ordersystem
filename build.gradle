@@ -43,6 +43,12 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.kafka:spring-kafka-test:3.3.6'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// JUnit5 연동
+	testImplementation 'org.testcontainers:junit-jupiter:1.21.0'
+	// Redis 컨테이너용 모듈
+	testImplementation 'org.testcontainers:redis:1.21.0'
+	// Kafka 컨테이너용 모듈 (필요 시)
+	testImplementation 'org.testcontainers:kafka:1.21.0'
 }
 
 tasks.named('test') {

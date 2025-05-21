@@ -145,4 +145,5 @@ class RedisInventoryRepositoryTest {
         assertThrows(RuntimeException.class, () ->
                 repository.reserveStock(1L, 2));
     }
+
 }

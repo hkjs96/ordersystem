@@ -60,4 +60,11 @@ public class RedisInventoryRepository implements InventoryRepositoryPort {
 
         redisTemplate.expire(key, reservationTtlSeconds, TimeUnit.SECONDS);
     }
+
+    @Override
+    public void releaseStock(Long productId, int quantity) {
+        String key = KEY_PREFIX + productId;
+        redisTemplate.opsForValue().increment(key, quantity);
+    }
+
 }

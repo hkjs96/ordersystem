@@ -1,6 +1,8 @@
 package com.github.hkjs96.ordersystem.domain.service;
 
+import com.github.hkjs96.ordersystem.adapter.out.event.DomainEventPublisher;
 import com.github.hkjs96.ordersystem.domain.entity.Order;
+import com.github.hkjs96.ordersystem.domain.event.OrderCancelledEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderStatus;
 import com.github.hkjs96.ordersystem.domain.repository.OrderRepository;
@@ -23,6 +25,7 @@ public class OrderService implements OrderUseCase {
     private final PublishEventPort eventPort;
     private final PaymentService paymentService;
     private final DeliveryService deliveryService;
+    private final DomainEventPublisher domainEventPublisher;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -72,8 +75,13 @@ public class OrderService implements OrderUseCase {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("주문 미발견: " + orderId));
         order.changeStatus(OrderStatus.CANCELLED);
-        orderRepository.save(order);
-        eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.CANCELLED));
+
+        // ① DB 커밋 후에 실행될 도메인 이벤트만 발행
+        domainEventPublisher.publish(new OrderCancelledEvent(
+                orderId,
+                order.getProductId(),
+                order.getQuantity()
+        ));
     }
 
     @Override
