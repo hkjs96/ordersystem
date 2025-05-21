@@ -4,7 +4,7 @@ import com.github.hkjs96.ordersystem.domain.entity.Order;
 import com.github.hkjs96.ordersystem.domain.model.OrderEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderStatus;
 import com.github.hkjs96.ordersystem.domain.repository.OrderRepository;
-import com.github.hkjs96.ordersystem.dto.request.CreateOrderRequest;
+import com.github.hkjs96.ordersystem.dto.request.OrderRequest;
 import com.github.hkjs96.ordersystem.dto.response.OrderResponse;
 import com.github.hkjs96.ordersystem.exception.PaymentException;
 import com.github.hkjs96.ordersystem.exception.ShipmentException;
@@ -26,7 +26,7 @@ public class OrderService implements OrderUseCase {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public OrderResponse createOrder(CreateOrderRequest req) {
+    public OrderResponse createOrder(OrderRequest req) {
         // 1) 재고 확인
         if (!inventoryPort.isStockAvailable(req.productId(), req.quantity())) {
             throw new IllegalStateException("재고 부족: productId=" + req.productId());

@@ -1,7 +1,7 @@
 package com.github.hkjs96.ordersystem.adapter.in.web;
 
 import com.github.hkjs96.ordersystem.common.ApiResponse;
-import com.github.hkjs96.ordersystem.dto.request.CreateOrderRequest;
+import com.github.hkjs96.ordersystem.dto.request.OrderRequest;
 import com.github.hkjs96.ordersystem.dto.response.OrderResponse;
 import com.github.hkjs96.ordersystem.port.in.OrderUseCase;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,7 +24,7 @@ public class OrderController {
     @Operation(summary = "주문 생성", description = "상품 ID와 수량으로 새 주문을 생성합니다.")
     @PostMapping
     public ResponseEntity<ApiResponse<OrderResponse>> createOrder(
-            @RequestBody @Valid CreateOrderRequest request
+            @RequestBody @Valid OrderRequest request
     ) {
         OrderResponse result = orderUseCase.createOrder(request);
         return ResponseEntity

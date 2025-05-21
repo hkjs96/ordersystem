@@ -5,10 +5,10 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 @Schema(description = "주문 생성 요청 DTO")
-public record CreateOrderRequest(
-        @NotNull @Schema(description = "상품 ID", example = "1001")
+public record OrderRequest(
+        @NotNull @Schema(description = "상품 ID", example = "1")
         Long productId,
 
-        @Min(1) @Schema(description = "수량", example = "2")
+        @Min(1) @Schema(description = "수량", example = "3")
         int quantity
 ) {}

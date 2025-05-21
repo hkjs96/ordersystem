@@ -4,7 +4,7 @@ import com.github.hkjs96.ordersystem.domain.entity.Order;
 import com.github.hkjs96.ordersystem.domain.model.OrderEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderStatus;
 import com.github.hkjs96.ordersystem.domain.repository.OrderRepository;
-import com.github.hkjs96.ordersystem.dto.request.CreateOrderRequest;
+import com.github.hkjs96.ordersystem.dto.request.OrderRequest;
 import com.github.hkjs96.ordersystem.exception.PaymentException;
 import com.github.hkjs96.ordersystem.exception.ShipmentException;
 import com.github.hkjs96.ordersystem.port.out.InventoryRepositoryPort;
@@ -43,11 +43,11 @@ class OrderServiceTest {
     @InjectMocks
     private OrderService orderService;
 
-    private CreateOrderRequest req;
+    private OrderRequest req;
 
     @BeforeEach
     void setUp() {
-        req = new CreateOrderRequest(
+        req = new OrderRequest(
                 /* productId= */ 1L,
                 /* quantity= */ 2
         );

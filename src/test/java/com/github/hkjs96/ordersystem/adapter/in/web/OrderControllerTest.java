@@ -1,7 +1,7 @@
 package com.github.hkjs96.ordersystem.adapter.in.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.hkjs96.ordersystem.dto.request.CreateOrderRequest;
+import com.github.hkjs96.ordersystem.dto.request.OrderRequest;
 import com.github.hkjs96.ordersystem.dto.response.OrderResponse;
 import com.github.hkjs96.ordersystem.domain.model.OrderStatus;
 import com.github.hkjs96.ordersystem.exception.PaymentException;
@@ -37,10 +37,10 @@ class OrderControllerIntegrationTest {
     @DisplayName("POST /api/orders — 주문 생성 성공")
     void createOrder_success() throws Exception {
         var dummy = new OrderResponse(1L, 1L, 2, OrderStatus.CREATED);
-        given(orderUseCase.createOrder(any(CreateOrderRequest.class)))
+        given(orderUseCase.createOrder(any(OrderRequest.class)))
                 .willReturn(dummy);
 
-        var req = new CreateOrderRequest(1L, 2);
+        var req = new OrderRequest(1L, 2);
         mvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
@@ -53,9 +53,9 @@ class OrderControllerIntegrationTest {
     @DisplayName("POST /api/orders — 재고 부족 시 400 Bad Request")
     void createOrder_badRequest_onIllegalState() throws Exception {
         doThrow(new IllegalStateException("재고 부족"))
-                .when(orderUseCase).createOrder(any(CreateOrderRequest.class));
+                .when(orderUseCase).createOrder(any(OrderRequest.class));
 
-        var req = new CreateOrderRequest(1L, 2);
+        var req = new OrderRequest(1L, 2);
         mvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
@@ -67,9 +67,9 @@ class OrderControllerIntegrationTest {
     @DisplayName("POST /api/orders — 결제 실패 시 502 Bad Gateway")
     void createOrder_badGateway_onPaymentException() throws Exception {
         doThrow(new PaymentException("결제 실패"))
-                .when(orderUseCase).createOrder(any(CreateOrderRequest.class));
+                .when(orderUseCase).createOrder(any(OrderRequest.class));
 
-        var req = new CreateOrderRequest(1L, 2);
+        var req = new OrderRequest(1L, 2);
         mvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
@@ -81,9 +81,9 @@ class OrderControllerIntegrationTest {
     @DisplayName("POST /api/orders — 배송 실패 시 500 Internal Server Error")
     void createOrder_internalError_onShipmentException() throws Exception {
         doThrow(new ShipmentException("배송 실패"))
-                .when(orderUseCase).createOrder(any(CreateOrderRequest.class));
+                .when(orderUseCase).createOrder(any(OrderRequest.class));
 
-        var req = new CreateOrderRequest(1L, 2);
+        var req = new OrderRequest(1L, 2);
         mvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(req)))
