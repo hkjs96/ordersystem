@@ -19,7 +19,7 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class OrderCancelledListenerTest {
 
-    private static final long TTL = 3600L;
+    private static long TTL = 3600L;
 
     @Mock
     private RedisTemplate<String, Integer> redisTemplate;
@@ -35,7 +35,7 @@ class OrderCancelledListenerTest {
     @BeforeEach
     void setUp() {
         // listener 생성자 인자로 TTL을 주입하려면 수동 생성이 필요할 수도 있습니다.
-        listener = new OrderCancelledListener(redisTemplate, kafkaPort, TTL);
+        listener = new OrderCancelledListener(redisTemplate, kafkaPort);
         // opsForValue() 호출 시 언제나 valueOps를 반환
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
     }

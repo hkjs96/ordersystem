@@ -30,7 +30,7 @@ public class OrderCancelledListener {
     private final PublishEventPort eventPort;
 
     @Value("${ordersystem.inventory.reservation-ttl-seconds:3600}")
-    private final long reservationTtlSeconds;
+    private long reservationTtlSeconds;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onOrderCancelled(OrderCancelledEvent event) {
