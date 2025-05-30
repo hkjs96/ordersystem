@@ -22,20 +22,35 @@ public class Delivery {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    /** 배송 시작일시 */
     private LocalDateTime startedAt;
+
+    /** 배송 완료일시 */
     private LocalDateTime completedAt;
+
+    /** 송장번호 (간소화: 자동 생성) */
+    private String trackingNumber;
+
+    /** 택배사 */
+    private String courierCompany;
 
     @PrePersist
     void onStart() {
         this.startedAt = LocalDateTime.now();
         this.status = OrderStatus.SHIPMENT_PREPARING;
+        this.courierCompany = "CJ대한통운";
+    }
+
+    /** 배송 시작 처리 */
+    public void markShipped() {
+        this.status = OrderStatus.SHIPPED;
+        // 🔧 간소화: 배송 시작 시점에 자동으로 송장번호 생성
+        if (this.trackingNumber == null) {
+            this.trackingNumber = "TRACK-" + this.orderId + "-" + System.currentTimeMillis() % 100000;
+        }
     }
 
     /** 배송 완료 처리 */
-    public void markShipped() {
-        this.status = OrderStatus.SHIPPED;
-    }
-
     public void markDelivered() {
         this.status = OrderStatus.DELIVERED;
         this.completedAt = LocalDateTime.now();

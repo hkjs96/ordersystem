@@ -14,9 +14,4 @@ public interface OrderUseCase {
      * 주문을 취소 상태로 전환합니다.
      */
     void cancelOrder(Long orderId);
-
-    /**
-     * 주문을 배송 준비 상태로 전환합니다.
-     */
-    void prepareShipment(Long orderId);
 }

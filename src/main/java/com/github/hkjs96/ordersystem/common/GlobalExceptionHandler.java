@@ -1,5 +1,6 @@
 package com.github.hkjs96.ordersystem.common;
 
+import com.github.hkjs96.ordersystem.exception.DeliveryException;
 import com.github.hkjs96.ordersystem.exception.PaymentException;
 import com.github.hkjs96.ordersystem.exception.ShipmentException;
 import org.springframework.http.HttpStatus;
@@ -44,6 +45,15 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(ShipmentException.class)
     public ResponseEntity<ApiResponse<Void>> handleShipment(ShipmentException ex) {
+        ApiResponse<Void> body = ApiResponse.error(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
+
+    /**
+     * 🔧 새로 추가: 배송 관련 예외 → 500 Internal Server Error
+     */
+    @ExceptionHandler(DeliveryException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDelivery(DeliveryException ex) {
         ApiResponse<Void> body = ApiResponse.error(ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }

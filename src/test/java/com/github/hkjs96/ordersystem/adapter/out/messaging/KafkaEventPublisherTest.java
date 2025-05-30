@@ -2,6 +2,7 @@ package com.github.hkjs96.ordersystem.adapter.out.messaging;
 
 import static org.mockito.Mockito.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.hkjs96.ordersystem.domain.model.OrderEvent;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +18,7 @@ import java.time.Instant;
 class KafkaEventPublisherTest {
 
     @Mock private KafkaTemplate<String, String> kafkaTemplate;
+    @Mock private ObjectMapper objectMapper;
     @InjectMocks private KafkaEventPublisher publisher;
 
     private final String topic = "orders-events";
@@ -25,7 +27,7 @@ class KafkaEventPublisherTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         // topic 은 생성자 인자로 주입되어야 하므로 직접 설정
-        publisher = new KafkaEventPublisher(kafkaTemplate, topic);
+        publisher = new KafkaEventPublisher(kafkaTemplate, objectMapper, topic);
     }
 
     @Test

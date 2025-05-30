@@ -56,6 +56,14 @@ ordersystem:
     reservation-ttl-seconds: 3600
   kafka:
     topic: orders-events
+  scheduler:
+    delivery:
+      enabled: true  # 스케줄러 활성화 (개발: true, 운영: 필요시)
+      ship-delay-minutes: 30      # 배송 준비 → 배송 중 전환 시간
+      delivery-delay-hours: 2     # 배송 중 → 배송 완료 전환 시간
+    # 🔧 배송 관련 설정
+  delivery:
+    default-courier: "CJ대한통운"
 
 # ??? (Optional) Redis / Kafka ?? ? ?? ??? ?? ? ?? ?????????????????
 # spring:

@@ -3,6 +3,7 @@ package com.github.hkjs96.ordersystem.adapter.in.web;
 import com.github.hkjs96.ordersystem.common.ApiResponse;
 import com.github.hkjs96.ordersystem.dto.request.OrderRequest;
 import com.github.hkjs96.ordersystem.dto.response.OrderResponse;
+import com.github.hkjs96.ordersystem.port.in.DeliveryUseCase;
 import com.github.hkjs96.ordersystem.port.in.OrderUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderUseCase orderUseCase;
+    private final DeliveryUseCase deliveryUseCase;
 
     @Operation(summary = "주문 생성", description = "상품 ID와 수량으로 새 주문을 생성합니다.")
     @PostMapping

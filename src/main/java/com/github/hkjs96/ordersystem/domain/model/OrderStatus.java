@@ -7,6 +7,7 @@ import java.util.Set;
 
 public enum OrderStatus {
     CREATED,                // 주문 생성 (결제 대기)
+    PAYMENT_REQUESTED,      // 결제 대기
     PAYMENT_COMPLETED,      // 결제 성공
     PAYMENT_FAILED,         // 결제 실패
     SHIPMENT_PREPARING,     // 배송 준비
