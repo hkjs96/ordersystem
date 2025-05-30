@@ -24,13 +24,34 @@ public class DeliveryController {
             @PathVariable Long orderId,
             @RequestParam OrderStatus status) {
 
-        switch (status) {
-            case SHIPPED -> deliveryUseCase.ship(orderId);
-            case DELIVERED -> deliveryUseCase.completeDelivery(orderId);
-            default -> throw new IllegalArgumentException("지원하지 않는 배송 상태: " + status);
-        }
+        try {
+            switch (status) {
+                case SHIPPED -> {
+                    // 🔧 현재 상태 확인 후 처리
+                    DeliveryInfoResponse currentStatus = deliveryUseCase.getDeliveryInfo(orderId);
+                    if (currentStatus.status() == OrderStatus.SHIPPED) {
+                        return ResponseEntity.ok(ApiResponse.success(null)); // 이미 배송 중 상태
+                    }
+                    deliveryUseCase.ship(orderId);
+                }
+                case DELIVERED -> {
+                    // 🔧 현재 상태 확인 후 처리
+                    DeliveryInfoResponse currentStatus = deliveryUseCase.getDeliveryInfo(orderId);
+                    if (currentStatus.status() == OrderStatus.DELIVERED) {
+                        return ResponseEntity.ok(ApiResponse.success(null)); // 이미 배송 완료 상태
+                    }
+                    deliveryUseCase.completeDelivery(orderId);
+                }
+                default -> throw new IllegalArgumentException("지원하지 않는 배송 상태: " + status);
+            }
 
-        return ResponseEntity.ok(ApiResponse.success(null));
+            return ResponseEntity.ok(ApiResponse.success(null));
+
+        } catch (IllegalStateException e) {
+            // 상태 전환 불가능한 경우 명확한 메시지 제공
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.error("상태 전환 실패: " + e.getMessage()));
+        }
     }
 
     @Operation(summary = "배송 정보 조회", description = "주문의 배송 정보를 조회합니다")

@@ -3,8 +3,7 @@ package com.github.hkjs96.ordersystem.adapter.out.cache;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.util.concurrent.TimeUnit;
-
+import com.github.hkjs96.ordersystem.domain.repository.ProductRepository;
 import com.github.hkjs96.ordersystem.exception.InsufficientStockException;
 import com.github.hkjs96.ordersystem.exception.ReservationFailedException;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,20 +18,21 @@ import org.springframework.data.redis.core.ValueOperations;
 @ExtendWith(MockitoExtension.class)
 class RedisInventoryRepositoryTest {
 
-    private static final long TTL_SECONDS = 3600L;
-
     @Mock
     private RedisTemplate<String, Integer> redisTemplate;
 
     @Mock
     private ValueOperations<String, Integer> valueOps;
 
-    private RedisInventoryRepository repository;
+    @Mock
+    private ProductRepository productRepository;
+
+    private InventoryRepository repository;
 
     @BeforeEach
     void setUp() {
         // TTL은 생성자에 직접 주입
-        repository = new RedisInventoryRepository(redisTemplate, TTL_SECONDS);
+        repository = new InventoryRepository(redisTemplate, productRepository);
     }
 
     @Test
@@ -112,7 +112,6 @@ class RedisInventoryRepositoryTest {
         repository.reserveStock(1L, 3);
 
         verify(valueOps).decrement("inventory:1", 3);
-        verify(redisTemplate).expire("inventory:1", TTL_SECONDS, TimeUnit.SECONDS);
     }
 
     @Test
@@ -139,8 +138,6 @@ class RedisInventoryRepositoryTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
         when(valueOps.get("inventory:1")).thenReturn(5);
         when(valueOps.decrement("inventory:1", 2)).thenReturn(3L);
-        doThrow(new RuntimeException("expire fail"))
-                .when(redisTemplate).expire("inventory:1", TTL_SECONDS, TimeUnit.SECONDS);
 
         assertThrows(RuntimeException.class, () ->
                 repository.reserveStock(1L, 2));

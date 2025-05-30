@@ -91,8 +91,8 @@ public class DeliveryService implements DeliveryUseCase {
         Delivery delivery = deliveryRepository.findByOrderId(orderId)
                 .orElseThrow(() -> new IllegalStateException("배송이 시작되지 않은 주문ID=" + orderId));
 
-        if (delivery.getStatus() != OrderStatus.SHIPMENT_PREPARING) {
-            throw new IllegalStateException("배송 준비 상태가 아님, 현재 상태=" + delivery.getStatus());
+        if (delivery.getStatus() != OrderStatus.SHIPPED) {
+            throw new IllegalStateException("배송 중 상태가 아님, 현재 상태=" + delivery.getStatus());
         }
 
         // 2) Delivery 엔티티 업데이트
