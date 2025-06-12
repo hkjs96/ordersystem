@@ -20,7 +20,7 @@ public class KafkaEventPublisher implements PublishEventPort {
     public KafkaEventPublisher(
             KafkaTemplate<String, String> kafkaTemplate,
             ObjectMapper objectMapper,  // 🔧 추가된 부분
-            @Value("${ordersystem.kafka.topic}") String topic) {
+            @Value("${ordersystem.kafka.topics.inventory-events}") String topic) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;  // 🔧 추가된 부분
         this.topic = topic;
