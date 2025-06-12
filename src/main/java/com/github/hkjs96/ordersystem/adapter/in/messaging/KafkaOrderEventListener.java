@@ -37,7 +37,7 @@ public class KafkaOrderEventListener {
                 // case SHIPPED 등 추가 분기 필요 시 여기에…
                 default ->
                         log.info("처리 대상 아님, 상태={}", event.status());
-            }
+        }
             // 필요한 추가 분기(FAILED, SHIPPED 등) 구현
         } catch (Exception e) {
             log.error("Kafka 이벤트 처리 실패: {}", message, e);

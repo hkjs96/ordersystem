@@ -1,9 +1,11 @@
 package com.github.hkjs96.ordersystem.domain.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.hkjs96.ordersystem.adapter.out.OrderRepositoryPort;
 import com.github.hkjs96.ordersystem.adapter.out.cache.InventoryRepository;
 import com.github.hkjs96.ordersystem.domain.entity.Payment;
 import com.github.hkjs96.ordersystem.domain.entity.Order;
+import com.github.hkjs96.ordersystem.domain.event.InventoryEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderEvent;
 import com.github.hkjs96.ordersystem.domain.model.OrderStatus;
 import com.github.hkjs96.ordersystem.domain.repository.PaymentRepository;
@@ -13,6 +15,8 @@ import com.github.hkjs96.ordersystem.port.out.InventoryRepositoryPort;
 import com.github.hkjs96.ordersystem.port.out.PublishEventPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +30,11 @@ public class PaymentService implements PaymentUseCase {
     private final OrderRepositoryPort orderRepositoryPort;
     private final PublishEventPort eventPort;
     private final InventoryRepositoryPort inventoryPort;
+    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final ObjectMapper objectMapper;
+
+    @Value("${ordersystem.kafka.topics.inventory-events}")
+    private String inventoryTopic;
 
     @Override
     @Transactional
@@ -67,6 +76,9 @@ public class PaymentService implements PaymentUseCase {
                 order.changeStatus(OrderStatus.PAYMENT_COMPLETED);
                 eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.PAYMENT_COMPLETED));
 
+                // 🆕 카프카로 재고 확정 이벤트 발행
+                publishInventoryConfirmed(orderId, order.getProductId(), order.getQuantity());
+
                 log.info("결제 성공 및 재고 차감 완료: orderId={}, productId={}, quantity={}",
                         orderId, order.getProductId(), order.getQuantity());
 
@@ -91,6 +103,38 @@ public class PaymentService implements PaymentUseCase {
 
             log.info("결제 실패 및 재고 복원 완료: orderId={}", orderId);
             throw new PaymentException("결제 실패: orderId=" + orderId);
+        }
+    }
+
+    /**
+     * 재고 확정 이벤트 발행 (결제 성공 시)
+     */
+    private void publishInventoryConfirmed(Long orderId, Long productId, Integer quantity) {
+        try {
+            InventoryEvent event = InventoryEvent.stockConfirmed(orderId, productId, quantity);
+            String payload = objectMapper.writeValueAsString(event);
+
+            kafkaTemplate.send(inventoryTopic, String.valueOf(productId), payload);
+            log.debug("재고 확정 이벤트 발행: {}", event);
+
+        } catch (Exception e) {
+            log.error("재고 확정 이벤트 발행 실패: orderId={}", orderId, e);
+        }
+    }
+
+    /**
+     * 재고 복원 이벤트 발행 (결제 실패 시)
+     */
+    private void publishInventoryReleased(Long orderId, Long productId, Integer quantity) {
+        try {
+            InventoryEvent event = InventoryEvent.stockReleased(orderId, productId, quantity);
+            String payload = objectMapper.writeValueAsString(event);
+
+            kafkaTemplate.send(inventoryTopic, String.valueOf(productId), payload);
+            log.debug("재고 복원 이벤트 발행: {}", event);
+
+        } catch (Exception e) {
+            log.error("재고 복원 이벤트 발행 실패: orderId={}", orderId, e);
         }
     }
 }

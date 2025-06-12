@@ -38,9 +38,26 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+
+    # Producer 설정 (안정적인 기본값)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: 1  # 리더 파티션 확인만 (성능과 안정성 균형)
+      retries: 3
+      properties:
+        max.in.flight.requests.per.connection: 5
+
+    # Consumer 설정
     consumer:
       group-id: ordersystem-group
       auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: true  # 시작은 자동 커밋으로 (간단하게)
+      properties:
+        session.timeout.ms: 30000
+        max.poll.records: 50
 
 # ??? Server & Logging ???????????????????????????????????????????????????????
 server:
@@ -55,7 +72,9 @@ ordersystem:
   inventory:
     reservation-ttl-seconds: 3600
   kafka:
-    topic: orders-events
+    topics:
+      order-events: order-events        # 주문 이벤트 (기존)
+      inventory-events: inventory-events # 재고 이벤트 (신규)
   scheduler:
     delivery:
       enabled: true  # 스케줄러 활성화 (개발: true, 운영: 필요시)
