@@ -21,7 +21,7 @@ public class KafkaOrderEventListener {
     private final DeliveryUseCase deliveryUseCase;
 
     @KafkaListener(
-            topics = "${ordersystem.kafka.topic}",
+            topics = "${ordersystem.kafka.topics:order-events}",
             groupId = "${spring.kafka.consumer.group-id}"
     )
     public void onMessage(String message) {
