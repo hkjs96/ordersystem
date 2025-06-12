@@ -20,6 +20,16 @@ public interface DeliveryRepository extends JpaRepository<Delivery, Long> {
     List<Delivery> findByStatusAndStartedAtBefore(OrderStatus status, LocalDateTime cutoffTime);
 
     /**
+     * 배송 완료 처리용: SHIPPED 상태이면서 배송 시작일이 cutoff 이전인 배송들 조회
+     */
+    List<Delivery> findByStatusAndShippedAtBefore(OrderStatus status, LocalDateTime cutoffTime);
+
+    /**
+     * 상태별 조회
+     */
+    List<Delivery> findByStatus(OrderStatus status);
+
+    /**
      * 통계용: 특정 상태의 배송 건수 조회
      */
     long countByStatus(OrderStatus status);

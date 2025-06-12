@@ -68,7 +68,7 @@ public class DeliveryStatusScheduler {
         LocalDateTime cutoffTime = LocalDateTime.now().minusHours(2);
 
         List<Delivery> shippedDeliveries = deliveryRepository
-                .findByStatusAndStartedAtBefore(OrderStatus.SHIPPED, cutoffTime);
+                .findByStatusAndShippedAtBefore(OrderStatus.SHIPPED, cutoffTime);
 
         log.info("배송 완료 대상: {}건", shippedDeliveries.size());
 

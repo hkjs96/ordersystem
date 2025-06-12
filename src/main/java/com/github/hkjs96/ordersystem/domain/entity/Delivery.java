@@ -25,6 +25,9 @@ public class Delivery {
     /** 배송 시작일시 */
     private LocalDateTime startedAt;
 
+    /** 배송 중 상태로 변경된 시간 */
+    private LocalDateTime shippedAt;
+
     /** 배송 완료일시 */
     private LocalDateTime completedAt;
 
@@ -44,6 +47,8 @@ public class Delivery {
     /** 배송 시작 처리 */
     public void markShipped() {
         this.status = OrderStatus.SHIPPED;
+        this.shippedAt = LocalDateTime.now();
+
         // 🔧 간소화: 배송 시작 시점에 자동으로 송장번호 생성
         if (this.trackingNumber == null) {
             this.trackingNumber = "TRACK-" + this.orderId + "-" + System.currentTimeMillis() % 100000;
