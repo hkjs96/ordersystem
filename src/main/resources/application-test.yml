@@ -1,6 +1,8 @@
 spring:
   application:
     name: ordersystem
+  profiles:
+    active: test
 
   # ??? Datasource & JPA ??????????????????????????????????????????????????????
   datasource:
@@ -38,9 +40,26 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
+
+    # Producer 설정 (안정적인 기본값)
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: 1  # 리더 파티션 확인만 (성능과 안정성 균형)
+      retries: 3
+      properties:
+        max.in.flight.requests.per.connection: 5
+
+    # Consumer 설정
     consumer:
       group-id: ordersystem-group
       auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      enable-auto-commit: true  # 시작은 자동 커밋으로 (간단하게)
+      properties:
+        session.timeout.ms: 30000
+        max.poll.records: 50
 
 # ??? Server & Logging ???????????????????????????????????????????????????????
 server:
@@ -49,13 +68,15 @@ server:
 logging:
   level:
     root: INFO
-    com.github.hkjs96.ordersystem: DEBUG
+    com.github.hkjs96.ordersystem.adapter.in.scheduler: DEBUG  # 스케줄러 로그 활성화
 
 ordersystem:
   inventory:
     reservation-ttl-seconds: 3600
   kafka:
-    topic: orders-events
+    topics:
+      order-events: order-events
+      inventory-events: inventory-events
   scheduler:
     delivery:
       enabled: true

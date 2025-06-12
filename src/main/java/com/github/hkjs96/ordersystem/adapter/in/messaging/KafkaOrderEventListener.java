@@ -1,7 +1,6 @@
 package com.github.hkjs96.ordersystem.adapter.in.messaging;
 
 import com.github.hkjs96.ordersystem.domain.model.OrderEvent;
-import com.github.hkjs96.ordersystem.domain.model.OrderStatus;
 import com.github.hkjs96.ordersystem.port.in.DeliveryUseCase;
 import com.github.hkjs96.ordersystem.port.in.OrderUseCase;
 import lombok.RequiredArgsConstructor;
