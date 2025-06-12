@@ -31,6 +31,12 @@ public class KafkaInventoryEventListener {
         log.debug("재고 이벤트 수신: {}", message);
 
         try {
+            // 🔧 JSON 파싱 전에 메시지 형태 확인
+            if (!message.contains("eventType")) {
+                log.warn("잘못된 재고 이벤트 형태 (eventType 없음): {}", message);
+                return;
+            }
+
             // JSON 파싱
             InventoryEvent event = objectMapper.readValue(message, InventoryEvent.class);
 

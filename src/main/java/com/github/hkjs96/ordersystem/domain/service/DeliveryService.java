@@ -32,57 +32,83 @@ public class DeliveryService implements DeliveryUseCase {
     public void initiateShipment(Long orderId) {
         log.info("배송 준비 시작: orderId={}", orderId);
 
-        Delivery delivery = Delivery.builder()
-                .orderId(orderId)
-                .build();
-        deliveryRepository.save(delivery);
+        try {
+            // 🔧 중복 배송 생성 방지
+            if (deliveryRepository.findByOrderId(orderId).isPresent()) {
+                log.warn("이미 배송이 생성된 주문: orderId={}", orderId);
+                return;
+            }
 
-        // 주문 상태 변경
-        Order order = orderRepositoryPort.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문 미발견: " + orderId));
+            // 주문 상태 확인
+            Order order = orderRepositoryPort.findById(orderId)
+                    .orElseThrow(() -> new IllegalArgumentException("주문 미발견: " + orderId));
 
-        // ① JPA 영속성 컨텍스트에 로드된 Order 객체의 상태만 변경해도
-        //    flush 시점에 자동으로 UPDATE 쿼리가 나갑니다.
-        //    따라서 아래 save() 호출은 사실 불필요합니다.
-        order.changeStatus(OrderStatus.SHIPMENT_PREPARING);
+            if (order.getStatus() != OrderStatus.PAYMENT_COMPLETED) {
+                log.warn("결제 완료 상태가 아님: orderId={}, currentStatus={}",
+                        orderId, order.getStatus());
+                return;
+            }
 
-        // orderRepository.save(order);  ← 제거 가능
+            // 배송 엔티티 생성
+            Delivery delivery = Delivery.builder()
+                    .orderId(orderId)
+                    .build();
+            delivery = deliveryRepository.save(delivery);
 
-        // ② 트랜잭션 커밋 후에만 이벤트를 내보내야
-        //    롤백 시 이벤트 중복/잘못 발행을 방지할 수 있습니다.
-        //    Spring 의 TransactionSynchronizationManager 를 활용하거나,
-        //    도메인 이벤트 퍼블리셔(예: ApplicationEventPublisher + @TransactionalEventListener) 와 결합하세요.
-        eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.SHIPMENT_PREPARING));
+            // 주문 상태 변경
+            // ① JPA 영속성 컨텍스트에 로드된 Order 객체의 상태만 변경해도
+            //    flush 시점에 자동으로 UPDATE 쿼리가 나갑니다.
+            //    따라서 아래 save() 호출은 사실 불필요합니다.
+            order.changeStatus(OrderStatus.SHIPMENT_PREPARING);
 
-        log.info("배송 준비 완료: orderId={}, deliveryId={}", orderId, delivery.getId());
+            // orderRepository.save(order);  ← 제거 가능
+
+            // ② 트랜잭션 커밋 후에만 이벤트를 내보내야
+            //    롤백 시 이벤트 중복/잘못 발행을 방지할 수 있습니다.
+            //    Spring 의 TransactionSynchronizationManager 를 활용하거나,
+            //    도메인 이벤트 퍼블리셔(예: ApplicationEventPublisher + @TransactionalEventListener) 와 결합하세요.
+            eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.SHIPMENT_PREPARING));
+
+            log.info("배송 준비 완료: orderId={}, deliveryId={}", orderId, delivery.getId());
+        } catch(Exception e) {
+            log.error("배송 준비 시작 실패: orderId={}, error={}", orderId, e.getMessage(), e);
+            throw new RuntimeException("배송 준비 시작 실패", e);
+        }
     }
 
     @Override
     public void ship(Long orderId) {
         log.info("배송 시작 처리: orderId={}", orderId);
 
-        // 1) Delivery 조회 & 상태 검증
-        Delivery delivery = deliveryRepository.findByOrderId(orderId)
-                .orElseThrow(() -> new IllegalStateException("배송이 시작되지 않은 주문ID=" + orderId));
+        try {
+            // 1) Delivery 조회 & 상태 검증
+            Delivery delivery = deliveryRepository.findByOrderId(orderId)
+                    .orElseThrow(() -> new IllegalStateException("배송이 시작되지 않은 주문ID=" + orderId));
 
-        if (delivery.getStatus() != OrderStatus.SHIPMENT_PREPARING) {
-            throw new IllegalStateException("배송 준비 상태가 아님, 현재 상태=" + delivery.getStatus());
+            if (delivery.getStatus() != OrderStatus.SHIPMENT_PREPARING) {
+                log.warn("배송 준비 상태가 아님: orderId={}, currentStatus={}",
+                        orderId, delivery.getStatus());
+                throw new IllegalStateException("배송 준비 상태가 아님, 현재 상태=" + delivery.getStatus());
+            }
+
+            // 2) Delivery 엔티티 상태 변경
+            delivery.markShipped();
+            deliveryRepository.save(delivery);
+
+            // 3) Order 상태 전이
+            Order order = orderRepositoryPort.findById(orderId)
+                    .orElseThrow(() -> new IllegalArgumentException("주문 미발견: " + orderId));
+            order.changeStatus(OrderStatus.SHIPPED);
+            orderRepositoryPort.save(order);
+
+            // 4) Kafka 이벤트 발행
+            eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.SHIPPED));
+
+            log.info("배송 시작 완료: orderId={}, deliveryId={}", orderId, delivery.getId());
+        } catch (Exception e) {
+            log.error("배송 시작 실패: orderId={}, error={}", orderId, e.getMessage(), e);
+            throw new RuntimeException("배송 시작 실패", e);
         }
-
-        // 2) Delivery 엔티티 상태 변경
-        delivery.markShipped();
-        deliveryRepository.save(delivery);
-
-        // 3) Order 상태 전이
-        Order order = orderRepositoryPort.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("주문 미발견: " + orderId));
-        order.changeStatus(OrderStatus.SHIPPED);
-        orderRepositoryPort.save(order);
-
-        // 4) Kafka 이벤트 발행
-        eventPort.publishOrderEvent(new OrderEvent(orderId, OrderStatus.SHIPPED));
-
-        log.info("배송 시작 완료: orderId={}, deliveryId={}", orderId, delivery.getId());
     }
 
     public void completeDelivery(Long orderId) {

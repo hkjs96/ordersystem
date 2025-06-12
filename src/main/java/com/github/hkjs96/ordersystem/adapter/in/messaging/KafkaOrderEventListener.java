@@ -20,19 +20,26 @@ public class KafkaOrderEventListener {
     private final DeliveryUseCase deliveryUseCase;
 
     @KafkaListener(
-            topics = "${ordersystem.kafka.topics:order-events}",
+            topics = "${ordersystem.kafka.topics.order-events}",
             groupId = "${spring.kafka.consumer.group-id}"
     )
     public void onMessage(String message) {
         try {
             // JSON → OrderEvent 파싱
             OrderEvent event = objectMapper.readValue(message, OrderEvent.class);
+
+            log.info("주문 이벤트 처리: orderId={}, status={}", event.orderId(), event.status());
+
             // 상태에 따라 UseCase 호출
             switch (event.status()) {
-                case PAYMENT_COMPLETED ->
+                case PAYMENT_COMPLETED -> {
+                        log.info("결제 완료 이벤트 처리 → 배송 준비 시작: orderId={}", event.orderId());
                         deliveryUseCase.initiateShipment(event.orderId());
-                case SHIPMENT_PREPARING ->
+                }
+                case SHIPMENT_PREPARING -> {
+                    log.info("배송 준비 이벤트 처리: orderId={}", event.orderId());
                         deliveryUseCase.ship(event.orderId());
+                }
                 // case SHIPPED 등 추가 분기 필요 시 여기에…
                 default ->
                         log.info("처리 대상 아님, 상태={}", event.status());
