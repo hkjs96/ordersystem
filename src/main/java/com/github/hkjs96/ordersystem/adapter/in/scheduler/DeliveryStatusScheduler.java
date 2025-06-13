@@ -6,6 +6,7 @@ import com.github.hkjs96.ordersystem.domain.repository.DeliveryRepository;
 import com.github.hkjs96.ordersystem.port.in.DeliveryUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -31,6 +32,13 @@ public class DeliveryStatusScheduler {
     private final DeliveryRepository deliveryRepository;
     private final DeliveryUseCase deliveryUseCase;
 
+    @Value("${ordersystem.scheduler.delivery.ship-delay-seconds:1800}")  // 기본 30분 = 1800초
+    private long shipDelaySeconds;
+
+    @Value("${ordersystem.scheduler.delivery.delivery-delay-seconds:7200}")  // 기본 2시간 = 7200초
+    private long deliveryDelaySeconds;
+
+
     /**
      * 배송 준비 → 배송 중 자동 처리
      * 30분 후 자동으로 배송 시작 처리
@@ -39,7 +47,7 @@ public class DeliveryStatusScheduler {
     public void processShipmentUpdates() {
         log.debug("배송 시작 자동 처리 스케줄러 실행");
 
-        LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(30);
+        LocalDateTime cutoffTime = LocalDateTime.now().minusSeconds(shipDelaySeconds);
 
         List<Delivery> preparingDeliveries = deliveryRepository
                 .findByStatusAndStartedAtBefore(OrderStatus.SHIPMENT_PREPARING, cutoffTime);
@@ -61,11 +69,12 @@ public class DeliveryStatusScheduler {
      * 배송 중 → 배송 완료 자동 처리
      * 2시간 후 자동으로 배송 완료 처리
      */
-    @Scheduled(fixedRate = 600000) // 10분마다 실행
+//    @Scheduled(fixedRate = 600000) // 10분마다 실행
+    @Scheduled(fixedRate = 60000) // 1분마다 실행
     public void processDeliveryCompletions() {
         log.debug("배송 완료 자동 처리 스케줄러 실행");
 
-        LocalDateTime cutoffTime = LocalDateTime.now().minusHours(2);
+        LocalDateTime cutoffTime = LocalDateTime.now().minusSeconds(deliveryDelaySeconds);
 
         List<Delivery> shippedDeliveries = deliveryRepository
                 .findByStatusAndShippedAtBefore(OrderStatus.SHIPPED, cutoffTime);

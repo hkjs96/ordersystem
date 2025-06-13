@@ -37,7 +37,7 @@ public class DeliveryService implements DeliveryUseCase {
             if (deliveryRepository.findByOrderId(orderId).isPresent()) {
                 log.warn("이미 배송이 생성된 주문: orderId={}", orderId);
                 return;
-            }
+        }
 
             // 주문 상태 확인
             Order order = orderRepositoryPort.findById(orderId)
