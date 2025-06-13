@@ -6,7 +6,7 @@
 [![Kafka](https://img.shields.io/badge/Kafka-7.4-black.svg)](https://kafka.apache.org/)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Spring Boot + DDD + Hexagonal Architecture 기반의 실무 수준 이커머스 주문 시스템입니다.
+Spring Boot + DDD + Hexagonal Architecture 기반의 이커머스 주문 시스템입니다.
 
 ## 📋 목차
 - [개요](#-개요)
