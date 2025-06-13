@@ -1,0 +1,55 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '3.4.5'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.github.hkjs96'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-actuator'
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.8.8'
+	implementation 'org.springframework.kafka:spring-kafka:3.3.5'
+	// Kafka 역직/직렬화 관련
+	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.18.3'
+
+	compileOnly 'org.projectlombok:lombok'
+
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	runtimeOnly 'com.h2database:h2'
+
+	annotationProcessor 'org.projectlombok:lombok'
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.kafka:spring-kafka-test:3.3.6'
+	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+	// JUnit5 연동
+	testImplementation 'org.testcontainers:junit-jupiter'
+	// Redis 컨테이너용 모듈
+	testImplementation 'com.redis.testcontainers:testcontainers-redis-junit:1.6.4'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
